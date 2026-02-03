@@ -16,6 +16,11 @@ base_path = Path(__file__).parent
 with open(base_path / "分类结果_v2.json", "r", encoding="utf-8") as f:
     result = json.load(f)
 
+# ========== 已取关，需要删除 ==========
+TO_DELETE = {
+    "Larry想做技术大佬",
+}
+
 # ========== 手动指定分类（优先级最高）==========
 MANUAL = {
     # ===== 美女UP主 → 生活 =====
@@ -218,6 +223,9 @@ def classify(original_cat, up_name):
 all_ups = []
 for cat, ups in result["categories"].items():
     for up in ups:
+        # 跳过已取关的
+        if up["name"] in TO_DELETE:
+            continue
         up["original_category"] = cat
         all_ups.append(up)
 
