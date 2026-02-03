@@ -19,6 +19,7 @@ with open(base_path / "分类结果_v2.json", "r", encoding="utf-8") as f:
 # ========== 已取关，需要删除 ==========
 TO_DELETE = {
     "Larry想做技术大佬",
+    "孙春龙NoWar",
 }
 
 # ========== 手动指定分类（优先级最高）==========
