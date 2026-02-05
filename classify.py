@@ -10,9 +10,10 @@ from pathlib import Path
 from collections import Counter
 
 base_path = Path(__file__).parent
+data_path = base_path / "data"
 
 # 读取详细数据
-with open(base_path / "up主详细数据.json", "r", encoding="utf-8") as f:
+with open(data_path / "up主详细数据.json", "r", encoding="utf-8") as f:
     uploaders = json.load(f)
 
 print(f"加载 {len(uploaders)} 个UP主数据")
@@ -674,12 +675,12 @@ sorted_results = dict(sorted(results.items(), key=lambda x: (-len(x[1]), x[0])))
 
 # 保存JSON
 output = {"categories": sorted_results}
-with open(base_path / "分类结果.json", "w", encoding="utf-8") as f:
+with open(data_path / "分类结果.json", "w", encoding="utf-8") as f:
     json.dump(output, f, ensure_ascii=False, indent=2)
 
 # 保存Markdown
 total = sum(len(ups) for ups in sorted_results.values())
-with open(base_path / "分类结果.md", "w", encoding="utf-8") as f:
+with open(data_path / "分类结果.md", "w", encoding="utf-8") as f:
     f.write("# B站关注UP主分类结果\n\n")
     f.write(f"总计: {total} 个UP主，{len(sorted_results)} 个分类\n\n")
     f.write("---\n\n")

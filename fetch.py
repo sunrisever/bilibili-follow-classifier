@@ -10,6 +10,7 @@ from pathlib import Path
 from bilibili_api import user, video, Credential
 
 BASE_PATH = Path(__file__).parent
+DATA_PATH = BASE_PATH / "data"
 
 # B站分区ID到名称的映射
 ZONE_MAP = {
@@ -45,7 +46,7 @@ ZONE_MAP = {
 
 
 def load_config():
-    with open(BASE_PATH / "config.json", "r", encoding="utf-8") as f:
+    with open(DATA_PATH / "config.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -61,7 +62,7 @@ def get_credential(config):
 
 def load_data():
     """加载现有UP主数据"""
-    data_path = BASE_PATH / "up主详细数据.json"
+    data_path = DATA_PATH / "up主详细数据.json"
     if data_path.exists():
         with open(data_path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -70,7 +71,7 @@ def load_data():
 
 def save_data(uploaders):
     """保存UP主数据"""
-    data_path = BASE_PATH / "up主详细数据.json"
+    data_path = DATA_PATH / "up主详细数据.json"
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(uploaders, f, ensure_ascii=False, indent=2)
 

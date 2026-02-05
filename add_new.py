@@ -10,10 +10,11 @@ import sys
 from pathlib import Path
 
 BASE_PATH = Path(__file__).parent
+DATA_PATH = BASE_PATH / "data"
 
 
 def load_classify_result():
-    path = BASE_PATH / "分类结果.json"
+    path = DATA_PATH / "分类结果.json"
     if path.exists():
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -21,7 +22,7 @@ def load_classify_result():
 
 
 def save_classify_result(data):
-    with open(BASE_PATH / "分类结果.json", "w", encoding="utf-8") as f:
+    with open(DATA_PATH / "分类结果.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
@@ -36,13 +37,13 @@ def save_md(data):
             link = f'https://space.bilibili.com/{up["mid"]}'
             lines.append(f'- [{up["name"]}]({link})\n')
         lines.append('\n')
-    with open(BASE_PATH / '分类结果.md', 'w', encoding='utf-8') as f:
+    with open(DATA_PATH / '分类结果.md', 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
 
 def generate_info():
     """重新生成信息汇总文件"""
-    data_path = BASE_PATH / "up主详细数据.json"
+    data_path = DATA_PATH / "up主详细数据.json"
     with open(data_path, "r", encoding="utf-8") as f:
         uploaders = json.load(f)
 
@@ -116,7 +117,7 @@ def generate_info():
         output_lines.append("-" * 80)
         output_lines.append("")
 
-    output_path = BASE_PATH / "up主信息汇总.txt"
+    output_path = DATA_PATH / "up主信息汇总.txt"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(output_lines))
     print(f"信息汇总已更新: {output_path}")

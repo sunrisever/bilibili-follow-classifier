@@ -17,10 +17,11 @@ from bilibili_api.utils.utils import get_api
 from bilibili_api.utils.network import Api
 
 BASE_PATH = Path(__file__).parent
+DATA_PATH = BASE_PATH / "data"
 
 
 def load_config():
-    with open(BASE_PATH / "config.json", "r", encoding="utf-8") as f:
+    with open(DATA_PATH / "config.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -35,7 +36,7 @@ def get_credential(config):
 
 
 def load_classify_result():
-    with open(BASE_PATH / "分类结果.json", "r", encoding="utf-8") as f:
+    with open(DATA_PATH / "分类结果.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 def main():
     # 读取详细数据
-    data_path = Path(__file__).parent / "up主详细数据.json"
+    data_path = Path(__file__).parent / "data" / "up主详细数据.json"
     with open(data_path, "r", encoding="utf-8") as f:
         uploaders = json.load(f)
 
@@ -95,7 +95,7 @@ def main():
         output_lines.append("")
 
     # 保存文件
-    output_path = Path(__file__).parent / "up主信息汇总.txt"
+    output_path = Path(__file__).parent / "data" / "up主信息汇总.txt"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(output_lines))
 
