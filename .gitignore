@@ -2,3 +2,9 @@ config.json
 __pycache__/
 *.pyc
 nul
+
+# 个人数据（关注列表、UP主信息）
+分类结果.json
+分类结果.md
+up主详细数据.json
+up主信息汇总.txt
