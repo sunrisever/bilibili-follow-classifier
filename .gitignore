@@ -2,3 +2,24 @@ data/
 __pycache__/
 *.pyc
 .env
+
+# Local/private workspace
+.env.*
+!.env.example
+local/*
+!local/README.md
+private/
+secrets/
+exports/
+artifacts/
+tmp/
+tmp-*/
+cache/
+.cache/
+*.sqlite
+*.db
+*.session
+*.cookies.json
+*.token
+*.pem
+*.key
