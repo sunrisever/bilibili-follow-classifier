@@ -2,7 +2,7 @@
 
 # B站关注 UP 主分类器
 
-> Auto-classify Bilibili followed UP masters and sync them to follow groups | B站关注 UP 主自动分类与分组同步工具
+> AI-assisted Bilibili follow classifier and group sync | B站关注 UP 主 AI 辅助分类与分组同步工具
 
 这个项目用来把混乱的 B 站关注列表整理成可维护的分组系统。它会采集每个已关注 UP 主的主页和内容信号，用你定义的规则做分类，并把结果同步回 B 站关注分组。
 

@@ -1,6 +1,6 @@
 ---
 name: bilibili-follow
-description: "B站关注 UP 主自动分类与分组同步。触发词：B站关注、UP主分类、bilibili关注整理、关注列表分组"
+description: "B站关注 UP 主 AI 辅助分类与分组同步。触发词：B站关注、UP主分类、bilibili关注整理、关注列表分组"
 ---
 
 # B站关注分类
