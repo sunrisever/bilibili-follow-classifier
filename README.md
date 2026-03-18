@@ -2,146 +2,180 @@ English | [简体中文](README_CN.md)
 
 # Bilibili Follow Classifier
 
-Auto-classify your Bilibili followed accounts (UP masters) into custom categories using keyword rules, and sync the results to Bilibili follow groups.
+> Auto-classify Bilibili followed UP masters and sync them to follow groups | B站关注 UP 主自动分类与分组同步工具
 
-## Features
+Organize a large Bilibili follow list into practical groups such as exam prep, AI, programming, math, news, or entertainment. This project fetches profile and content signals for each followed UP master, scores them with your rule set, and syncs the final categories back to Bilibili follow groups.
 
-- Auto-fetch UP master info (bio, collections, video titles, tags, posting zones, etc.)
-- Keyword-rule-based auto-classification + LLM secondary review
-- Incremental addition of newly followed accounts
-- One-click sync classification results to Bilibili follow groups
-- **AI coding assistant support**: includes `CLAUDE.md` and `AGENTS.md` for Claude Code, Codex, OpenCode, and OpenClaw
+## Why this project
 
-## Quick Start
+If you follow hundreds or thousands of UP masters, the default Bilibili follow list quickly becomes noisy. This repo turns your follow list into a maintainable system:
 
-### 1. Install Dependencies
+- fetch structured signals from followed accounts
+- classify them with editable keyword and zone rules
+- review edge cases with an LLM or by hand
+- sync the final result back to Bilibili groups
+
+## Highlights
+
+- Full follow-list fetch with posting zones, tags, series, collections, and profile metadata
+- Rule-based classification that stays editable and auditable
+- Manual override support for stable, high-confidence mapping
+- Incremental add flow for newly followed UP masters
+- Dry-run sync before destructive updates
+- AI coding assistant support via `SKILL.md`, `AGENTS.md`, and `CLAUDE.md`
+
+## Quick Links
+
+- [SKILL.md](SKILL.md)
+- [AGENTS.md](AGENTS.md)
+- [CLAUDE.md](CLAUDE.md)
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+
+## Workflow at a glance
+
+1. Copy `data_example/` to `data/`
+2. Fill in your Bilibili cookies in `data/config.json`
+3. Edit `data/classify_rules.json` to define your categories
+4. Run `python fetch.py all`
+5. Run `python classify.py`
+6. Review doubtful cases manually or with an LLM
+7. Run `python sync_groups.py --dry-run`
+8. If the preview looks right, run `python sync_groups.py`
+
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Initialize Data Directory
+## Configuration
 
-Copy `data_example/` to `data/` and edit the config:
+Copy the example data directory first:
 
 ```bash
 cp -r data_example data
 ```
 
-Edit `data/config.json` with your Bilibili cookies:
+Then edit `data/config.json`:
 
 ```json
 {
-    "bilibili": {
-        "sessdata": "YOUR_SESSDATA",
-        "bili_jct": "YOUR_bili_jct",
-        "buvid3": "YOUR_buvid3",
-        "dedeuserid": "YOUR_UID"
-    }
+  "bilibili": {
+    "sessdata": "YOUR_SESSDATA",
+    "bili_jct": "YOUR_bili_jct",
+    "buvid3": "YOUR_buvid3",
+    "dedeuserid": "YOUR_UID"
+  }
 }
 ```
 
-How to get cookies: Log in to Bilibili → F12 Developer Tools → Application → Cookies → copy the fields.
+How to get the cookies:
 
-### 3. Customize Classification Rules
+- Log in to Bilibili
+- Open Developer Tools
+- Go to `Application -> Cookies`
+- Copy the required fields
 
-Edit `data/classify_rules.json` to define your category system:
+## Classification rules
 
-- **categories**: List of category names; the last one is the default
-- **manual**: Manually assign specific UP masters (highest priority)
-- **keyword_rules**: Keywords and weights for each category
-- **zone_mapping**: Bilibili posting zone → category mapping
+The core rule file is `data/classify_rules.json`.
 
-See `data_example/classify_rules.json` for a starter template.
+- `categories`: category list, where the last item is typically the fallback category
+- `manual`: hard overrides for specific UP masters
+- `keyword_rules`: weighted keyword map per category
+- `zone_mapping`: Bilibili posting zone to category mapping
 
-### 4. Fetch Data
+The project is intentionally rule-first: you can audit and evolve your taxonomy over time instead of locking yourself into an opaque model output.
+
+## Main commands
+
+### Fetch all follows
 
 ```bash
-# Fetch all followed UP masters' detailed info
 python fetch.py all
 ```
 
-> Note: Bilibili API has rate limits. Posting zone data may be missing due to throttling; run `python fetch.py zones` later to backfill.
+Optional:
 
-### 5. Algorithm Classification
+```bash
+python fetch.py zones
+python fetch.py <mid>
+```
+
+### Run classification
 
 ```bash
 python classify.py
 ```
 
-Results saved to `data/分类结果.json` and `data/分类结果.md`. Keyword-rule accuracy is ~90%.
+Outputs:
 
-### 6. LLM Review (Recommended)
+- `data/分类结果.json`
+- `data/分类结果.md`
 
-Feed `data/分类结果.json` and `data/up主信息汇总.txt` to an LLM (Claude, ChatGPT, DeepSeek, etc.) for secondary review. The LLM flags questionable classifications for manual correction.
-
-### 7. Manual Review
-
-Verify LLM-flagged items by checking UP master homepages. Fix misclassifications in `data/分类结果.json`.
-
-Add confirmed correct classifications to the `manual` field in `classify_rules.json` to persist them.
-
-### 8. Sync to Bilibili Groups
+### Regenerate readable summaries
 
 ```bash
-# Dry run first
-python sync_groups.py --dry-run
-
-# Execute
-python sync_groups.py
+python generate_info.py
 ```
 
-The script auto-deletes old groups → creates new groups → batch-assigns UP masters.
-
-## Daily Usage
-
-### Add New Follows
+### Add newly followed accounts
 
 ```bash
 python add_new.py <mid>
 ```
 
-Auto: fetch info → classify → append to results → update summary.
-
-### Backfill Missing Zones
+### Preview and sync to Bilibili
 
 ```bash
-python fetch.py zones
+python sync_groups.py --dry-run
+python sync_groups.py
 ```
 
-Re-run `python classify.py` after backfilling, as posting zones are a key classification signal.
+## Recommended review loop
 
-### Other Commands
+The best results usually come from this layered process:
 
-```bash
-python generate_info.py                    # Regenerate info summary
-python sync_groups.py --category Gaming    # Sync specific categories only
+1. let the rules classify everything
+2. export readable summaries
+3. ask an LLM to flag suspicious assignments
+4. manually confirm the truly ambiguous accounts
+5. move stable cases into `manual` overrides
+
+That keeps the system improving over time instead of repeating the same corrections.
+
+## Project structure
+
+```text
+├── fetch.py
+├── classify.py
+├── sync_groups.py
+├── add_new.py
+├── generate_info.py
+├── SKILL.md
+├── AGENTS.md
+├── CLAUDE.md
+├── RELEASE_CHECKLIST.md
+├── data_example/
+└── data/
 ```
 
-## Project Structure
+## Privacy and safety
 
-```
-├── classify.py              # Classification algorithm (keyword rules)
-├── fetch.py                 # Data fetching (full/incremental/zone backfill)
-├── add_new.py               # Incremental add (fetch + classify pipeline)
-├── generate_info.py         # Generate human-readable summary
-├── sync_groups.py           # Sync to Bilibili follow groups
-├── requirements.txt
-├── data_example/            # Template configs (copy to data/)
-│   ├── config.json
-│   └── classify_rules.json
-└── data/                    # Personal data (gitignored)
-    ├── config.json
-    ├── classify_rules.json
-    └── ...
-```
+- `data/` contains personal cookies and classification data and should stay local
+- The repository is set up to keep local/private data out of Git
+- Always review sync actions with `--dry-run` before changing Bilibili groups
 
-## Notes
+## Important cautions
 
-- `data/` contains personal data and is gitignored
-- Running `classify.py` overwrites previous results (save manual overrides in the `manual` field)
-- Group names cannot contain `/` (auto-stripped)
-- First-time workflow: copy data dir → fill cookies → fetch → classify → LLM review → manual review → sync
+- `sync_groups.py` is destructive for custom Bilibili follow groups
+- Cookies expire periodically
+- Large-scale fetches may hit Bilibili throttling; use zone backfill later if needed
+- Group names cannot contain `/`
+
+## Related projects
+
+- [bilibili-favorites-classifier](https://github.com/sunrisever/bilibili-favorites-classifier): classify and rebuild Bilibili favorites folders
 
 ## License
 

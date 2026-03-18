@@ -1,161 +1,181 @@
 [English](README.md) | 简体中文
 
-# B站关注UP主分类系统
+# B站关注 UP 主分类器
 
-自动采集B站关注列表，通过关键词规则将UP主分类到自定义类别，并同步到B站关注分组。
+> Auto-classify Bilibili followed UP masters and sync them to follow groups | B站关注 UP 主自动分类与分组同步工具
 
-## 功能
+这个项目用来把混乱的 B 站关注列表整理成可维护的分组系统。它会采集每个已关注 UP 主的主页和内容信号，用你定义的规则做分类，并把结果同步回 B 站关注分组。
 
-- 自动采集UP主信息（签名、合集、视频标题、标签、投稿分区等）
-- 基于关键词规则自动分类 + AI大模型二次审核
-- 支持增量添加新关注的UP主
-- 一键同步分类结果到B站关注分组
-- **AI 编程助手支持**：内置 `CLAUDE.md` 和 `AGENTS.md`，兼容 Claude Code、Codex、OpenCode、OpenClaw
+## 这个项目解决什么问题
 
-## 快速开始
+关注几百上千个 UP 主之后，默认关注列表通常已经失去整理能力。这个仓库把关注管理拆成一条清晰的流水线：
 
-### 1. 安装依赖
+- 采集关注对象的结构化信息
+- 用可编辑、可审计的规则体系做分类
+- 用大模型或人工复核边界样本
+- 把最终结果同步回 B 站分组
+
+## 核心特点
+
+- 全量采集关注列表，包含签名、合集、系列、视频标题、标签、投稿分区等信号
+- 规则优先的分类方式，方便长期迭代和人工维护
+- 支持 `manual` 手工覆盖，稳定保留高置信度分类
+- 支持增量添加新关注的 UP 主
+- 同步前支持 `--dry-run` 预览
+- 内置 `SKILL.md`、`AGENTS.md`、`CLAUDE.md`，适合 Claude Code、Codex、OpenCode、OpenClaw 等 AI 编程助手
+
+## 快速入口
+
+- [SKILL.md](SKILL.md)
+- [AGENTS.md](AGENTS.md)
+- [CLAUDE.md](CLAUDE.md)
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+
+## 使用流程总览
+
+1. 把 `data_example/` 复制成 `data/`
+2. 在 `data/config.json` 中填写 B 站 Cookie
+3. 在 `data/classify_rules.json` 中定义你的分类体系
+4. 运行 `python fetch.py all`
+5. 运行 `python classify.py`
+6. 用大模型或人工复核疑难项
+7. 运行 `python sync_groups.py --dry-run`
+8. 确认无误后运行 `python sync_groups.py`
+
+## 安装
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 初始化 data 目录
+## 配置
 
-将 `data_example/` 复制为 `data/`，然后修改配置：
+先复制示例目录：
 
 ```bash
 cp -r data_example data
 ```
 
-编辑 `data/config.json`，填入你的B站cookie：
+再编辑 `data/config.json`：
 
 ```json
 {
-    "bilibili": {
-        "sessdata": "你的SESSDATA",
-        "bili_jct": "你的bili_jct",
-        "buvid3": "你的buvid3",
-        "dedeuserid": "你的UID"
-    }
+  "bilibili": {
+    "sessdata": "你的SESSDATA",
+    "bili_jct": "你的bili_jct",
+    "buvid3": "你的buvid3",
+    "dedeuserid": "你的UID"
+  }
 }
 ```
 
-获取方式：浏览器登录B站 → F12开发者工具 → Application → Cookies → 复制对应字段。
+Cookie 获取方式：
 
-### 3. 自定义分类规则
+- 登录 B 站
+- 打开开发者工具
+- 进入 `Application -> Cookies`
+- 复制对应字段
 
-编辑 `data/classify_rules.json`，定义你自己的分类体系：
+## 分类规则说明
 
-- **categories**：分类名称列表，最后一个作为默认分类
-- **manual**：手动指定某些UP主的分类（优先级最高）
-- **keyword_rules**：每个分类的关键词和权重，用于自动匹配
-- **zone_mapping**：B站投稿分区到自定义分类的映射
+核心规则文件是 `data/classify_rules.json`。
 
-`data_example/classify_rules.json` 提供了一个简单示例，可以在此基础上扩展。
+- `categories`：分类列表，通常最后一个作为兜底分类
+- `manual`：对特定 UP 主的人工硬覆盖
+- `keyword_rules`：每个分类的关键词与权重
+- `zone_mapping`：B 站投稿分区到分类的映射
 
-### 4. 采集信息
+这个项目故意采用“规则优先”的方式，而不是把分类完全交给黑盒模型。这样你可以持续积累自己的分类体系，而不是每次都重新猜。
+
+## 常用命令
+
+### 全量采集
 
 ```bash
-# 全量采集所有关注UP主的详细信息
 python fetch.py all
 ```
 
-> 注意：B站API有频率限制，短时间大量请求会触发风控（错误码-352）。投稿分区数据可能因限流而缺失，过一段时间后运行 `python fetch.py zones` 可以补充。
+可选：
 
-### 5. 算法分类
+```bash
+python fetch.py zones
+python fetch.py <mid>
+```
+
+### 运行分类
 
 ```bash
 python classify.py
 ```
 
-分类结果保存到 `data/分类结果.json` 和 `data/分类结果.md`。算法基于关键词规则匹配，准确率约90%。
+输出：
 
-### 6. AI大模型审核
+- `data/分类结果.json`
+- `data/分类结果.md`
 
-算法分类完成后，建议使用AI大模型（如 Claude、ChatGPT、DeepSeek 等）对分类结果进行二次审核。
-
-将 `data/分类结果.json` 和 `data/up主信息汇总.txt` 提供给AI，让它逐个检查分类是否合理，AI会标注出它认为有疑问的分类。常见需要修正的情况：
-- AI相关内容被归到编程（应细分到AI学术/产品/教程三个子类）
-- 纯数学内容被归到编程（应归数学/物理）
-- 时政类被归到科普/人文（应归时政类）
-
-### 7. 人工审核
-
-针对AI大模型标注有疑问的分类，人工逐个核实并最终确认。查看UP主主页判断其内容方向，修正 `data/分类结果.json` 中的错误分类。
-
-修正后同步MD文件：
+### 重新生成可读汇总
 
 ```bash
-python -c "from add_new import save_md, load_classify_result; save_md(load_classify_result())"
+python generate_info.py
 ```
 
-审核过程中可以将确认正确的UP主加入 `data/classify_rules.json` 的 `manual` 字段，这样下次全量分类时不会被覆盖。
-
-### 8. 同步到B站分组
-
-```bash
-# 试运行，查看将执行的操作
-python sync_groups.py --dry-run
-
-# 正式同步
-python sync_groups.py
-```
-
-脚本会自动：删除旧分组 → 创建新分组 → 批量分配UP主。
-
-## 日常使用
-
-### 新增UP主
+### 增量添加新关注
 
 ```bash
 python add_new.py <mid>
 ```
 
-自动：采集信息 → 算法分类 → 添加到分类结果 → 更新信息汇总。
-
-### 补充缺失的投稿分区
+### 预览并同步到 B 站
 
 ```bash
-python fetch.py zones
+python sync_groups.py --dry-run
+python sync_groups.py
 ```
 
-补充后建议重新运行 `python classify.py`，因为投稿分区是分类的重要依据。
+## 推荐复核方式
 
-### 其他命令
+这类分类工具最稳的用法通常是：
 
-```bash
-python generate_info.py       # 重新生成信息汇总
-python sync_groups.py --category 考研  # 只同步指定分类
-```
+1. 先让规则跑完整体分类
+2. 导出可读摘要
+3. 让大模型标记可疑分类
+4. 人工确认真正模糊的样本
+5. 把稳定样本补回 `manual`
+
+这样系统会越用越稳，而不是每次都从头返工。
 
 ## 项目结构
 
-```
-├── classify.py                    # 分类算法（从规则文件加载配置）
-├── fetch.py                       # 信息采集（全量/增量/补充分区）
-├── add_new.py                     # 增量添加UP主（采集+分类一条龙）
-├── generate_info.py               # 生成可读的信息汇总文本
-├── sync_groups.py                 # 同步分类结果到B站关注分组
-├── requirements.txt               # Python依赖
-├── data_example/                  # 示例data目录（首次使用复制为data/）
-│   ├── config.json                # B站cookie配置模板
-│   └── classify_rules.json        # 分类规则模板
-└── data/                          # 个人数据（不纳入版本控制）
-    ├── config.json                # B站cookie配置
-    ├── classify_rules.json        # 你的分类规则
-    ├── up主详细数据.json           # UP主采集的原始数据
-    ├── up主信息汇总.txt            # 可读的信息汇总（供审核参考）
-    ├── 分类结果.json               # 分类结果（程序读写）
-    └── 分类结果.md                 # 分类结果（人工浏览，带B站链接）
+```text
+├── fetch.py
+├── classify.py
+├── sync_groups.py
+├── add_new.py
+├── generate_info.py
+├── SKILL.md
+├── AGENTS.md
+├── CLAUDE.md
+├── RELEASE_CHECKLIST.md
+├── data_example/
+└── data/
 ```
 
-## 注意事项
+## 隐私与安全
 
-- `data/` 目录包含个人隐私数据，已加入 `.gitignore`，不会上传到远端
-- 全量分类（`classify.py`）会覆盖现有分类结果，之前的人工调整会丢失（建议把调整写入 `manual` 字段保留）
-- B站分组名不支持特殊字符（`/`等会被自动去除）
-- 首次使用需按顺序执行：复制data目录 → 填写cookie → 采集 → 算法分类 → AI审核 → 人工审核 → 同步
+- `data/` 中包含 Cookie 和个人分类数据，应只保存在本地
+- 仓库已按隐私型规则配置，避免把本地敏感数据提交到 Git
+- 正式同步前一定先用 `--dry-run` 检查
+
+## 风险提醒
+
+- `sync_groups.py` 会重建你在 B 站上的自定义关注分组
+- Cookie 会过期
+- 大规模采集可能会触发 B 站限流，投稿分区可以后补
+- 分组名不能包含 `/`
+
+## 相关项目
+
+- [bilibili-favorites-classifier](https://github.com/sunrisever/bilibili-favorites-classifier)：用于整理和重建 B 站收藏夹
 
 ## 开源协议
 
