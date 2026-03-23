@@ -2,234 +2,214 @@ English | [简体中文](README_CN.md)
 
 # Bilibili Follow
 
-> Export your Bilibili follow list, let ChatGPT / Claude / Gemini / Codex or any frontier LLM help with grouping, then sync the result back to Bilibili follow groups.
+> Export your Bilibili follow list, classify it locally, optionally let ChatGPT / Claude / Gemini / Codex review the difficult cases, then sync the final grouping plan back to Bilibili follow groups.
 
-This project is for people who follow a lot of Bilibili UP masters and want a workflow that is stronger than the built-in follow grouping experience. Instead of relying on a weak in-product heuristic, you first export structured follow data, then let a stronger general-purpose AI model help you review or refine the grouping plan, and finally sync the result back to Bilibili.
+This project is for people who follow a lot of Bilibili creators and want something stronger than Bilibili's ordinary manual grouping workflow.
 
-## What this project actually does
+Important clarification:
 
-It builds a practical follow-management pipeline:
+- Bilibili follow groups do **not** provide a strong built-in AI grouping workflow.
+- This repository does **not** rely on a built-in AI model inside the script.
+- The real workflow is: export structured data -> run local rules -> optionally ask a stronger external model to review edge cases -> sync the final result back.
 
-1. Fetch your followed UP masters and their public signals.
+## What this project is
+
+This is a follow-management pipeline:
+
+1. Fetch followed creators and their public signals.
 2. Classify them with editable local rules.
-3. Export readable summaries for AI review or manual review.
-4. Sync the final grouping result back to Bilibili follow groups.
-
-So the core idea is not "the extension or script has its own built-in AI".
-The real idea is:
-
-- export data from Bilibili
-- use a stronger external AI model if needed
-- keep the final taxonomy under your own control
-- sync the final result back
+3. Export a human-readable summary.
+4. Optionally let a frontier LLM review suspicious cases.
+5. Sync the final grouping plan back to Bilibili follow groups.
 
 ## Do I need an API key?
 
-No, not for the recommended beginner workflow.
+No, not for the recommended workflow.
 
-The easiest path is:
+The intended beginner path is:
 
-- run the local scripts to fetch and classify
-- open the exported summary in ChatGPT web/app, Claude web/app, Gemini, Codex, Claude Code, OpenCode, or another LLM tool
-- ask it to review suspicious items or suggest better category rules
-- apply the final result locally and sync back to Bilibili
+- run the local scripts
+- open the exported Markdown summary
+- send it to ChatGPT web/app, Claude web/app, Gemini, Codex, Claude Code, OpenCode, or another strong general-purpose model
+- ask for review suggestions
+- apply the final result locally and sync back
 
-You only need an API key if you want to automate the AI-review step inside your own scripts.
-That is an advanced mode, not the default requirement.
+API integration is an advanced automation mode, not the default.
 
-## Who this is for
+## Beginner quick start
 
-This project is useful if you:
-
-- follow hundreds or thousands of UP masters
-- want categories like exam prep, AI, programming, math, news, lifestyle, or entertainment
-- prefer a workflow you can inspect and improve over time
-- want something stronger than Bilibili's default grouping experience
-
-## Core ideas
-
-- **Rule-first, AI-assisted**: rules stay auditable; AI is used to review edge cases, not to hide the logic.
-- **Human-controlled taxonomy**: you decide the category system.
-- **Safe sync**: dry-run before changing Bilibili groups.
-- **Incremental maintenance**: new follows can be added later without rebuilding everything from scratch.
-
-## Beginner workflow
-
-### 1. Install dependencies
+### Step 1. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Copy the example data folder
+### Step 2. Prepare the data folder
 
-```bash
-cp -r data_example data
-```
+Copy `data_example` to `data`.
 
-If you are on Windows PowerShell, you can simply copy the folder manually.
+### Step 3. Fill in Bilibili cookies
 
-### 3. Fill in your Bilibili cookies
-
-Edit `data/config.json` and provide:
+Edit `data/config.json` and fill:
 
 - `sessdata`
 - `bili_jct`
 - `buvid3`
 - `dedeuserid`
 
-These are required because the script needs your own account context to read and later sync follow groups.
-
-### 4. Define your category system
-
-Edit `data/classify_rules.json`.
-
-Important sections:
-
-- `categories`: your category list
-- `manual`: hard overrides for specific UP masters
-- `keyword_rules`: keyword-based hints
-- `zone_mapping`: mapping from Bilibili posting zones to your categories
-
-A common setup is to create categories such as:
-
-- Exam Prep
-- AI
-- Programming
-- Math
-- News
-- Entertainment
-- Others
-
-## Recommended first run
-
-### Step 1: Fetch your follow data
+### Step 4. Run the first fetch
 
 ```bash
 python fetch.py all
 ```
 
-Optional commands:
-
-```bash
-python fetch.py zones
-python fetch.py <mid>
-```
-
-Main output:
+You should then see:
 
 - `data/up主详细数据.json`
 
-### Step 2: Run the local classifier
+### Step 5. Run local classification
 
 ```bash
 python classify.py
 ```
 
-Main outputs:
+You should then see:
 
 - `data/分类结果.json`
 - `data/分类结果.md`
 
-### Step 3: Let a stronger AI review the result
-
-This is the key step many beginners misunderstand.
-
-You do **not** need to wire an API key into this repo.
-Instead, you can simply:
+### Step 6. Review and sync
 
 1. Open `data/分类结果.md`
-2. Paste or upload it to ChatGPT / Claude / Gemini / Codex / Claude Code / OpenCode
-3. Ask questions like:
-   - which accounts look suspiciously misclassified?
-   - which manual overrides should be added?
-   - how should I improve my keyword rules?
-   - which categories are too broad or too fragmented?
-
-Then you update `data/classify_rules.json` or `manual` overrides accordingly.
-
-### Step 4: Preview the sync
+2. Give it to your preferred model
+3. Ask for suspicious items, overly broad categories, or suggested manual overrides
+4. Update your local rules
+5. Preview:
 
 ```bash
 python sync_groups.py --dry-run
 ```
 
-You can also preview only selected categories:
-
-```bash
-python sync_groups.py --dry-run --category "Exam Prep"
-```
-
-### Step 5: Sync back to Bilibili
+6. Sync:
 
 ```bash
 python sync_groups.py
 ```
 
-## Typical maintenance workflow
+## Screenshot-style beginner walkthrough
 
-After your first full run, the usual long-term workflow is:
+### What you edit first
 
-1. add newly followed UP masters
-2. run classification again
+Open:
+
+- `data/config.json`
+- `data/classify_rules.json`
+
+You mainly need:
+
+- cookies in `config.json`
+- category names in `classify_rules.json`
+
+### What you run first
+
+```bash
+python fetch.py all
+```
+
+After that, imagine the first “result screen” as:
+
+- a JSON file appears in `data/`
+- it contains your followed creators
+- nothing has been written back to Bilibili yet
+
+### What you run second
+
+```bash
+python classify.py
+```
+
+Now you should get:
+
+- a machine-readable result file
+- a Markdown summary for human/AI review
+
+### What you hand to AI
+
+You do **not** need to build an API flow.
+Just open or upload:
+
+- `data/分类结果.md`
+
+Recommended questions:
+
+- Which creators are obviously in the wrong group?
+- Which manual overrides should I add?
+- Which categories are too broad?
+- Which keyword rules need improvement?
+
+### What you sync back
+
+Only after your manual review and dry-run:
+
+```bash
+python sync_groups.py --dry-run
+python sync_groups.py
+```
+
+That is the point where Bilibili groups are actually changed.
+
+## Typical maintenance flow
+
+After the first full run, the normal long-term workflow is:
+
+1. fetch newly followed creators
+2. classify again
 3. review edge cases with your preferred AI tool
-4. dry-run sync
-5. sync the final result
+4. dry-run
+5. sync
 
-For incremental updates:
+Incremental add:
 
 ```bash
 python add_new.py <mid>
 ```
 
-## Files you should care about
+## Files that matter
 
 | File | Purpose |
 | --- | --- |
 | `data/config.json` | local cookies and runtime config |
-| `data/classify_rules.json` | your editable category system |
-| `data/up主详细数据.json` | fetched follow data |
+| `data/classify_rules.json` | your category system |
+| `data/up主详细数据.json` | fetched creator data |
 | `data/分类结果.json` | machine-readable result |
-| `data/分类结果.md` | AI-friendly and human-friendly review file |
+| `data/分类结果.md` | AI-friendly review file |
 | `generate_info.py` | regenerate readable summaries |
-| `sync_groups.py` | preview or apply follow-group sync |
+| `sync_groups.py` | dry-run or real sync |
 
-## Why this is better than basic AI grouping inside the browser
+## Common misunderstandings
 
-Many tools claim "AI grouping", but their built-in grouping is often too weak because:
+### “Does Bilibili already have good AI grouping for this?”
 
-- the context window is too small
-- the metadata is too shallow
-- the taxonomy is opaque
-- the result is hard to audit or improve
+No. This project exists because the normal grouping experience is limited, and many users want a stronger workflow.
 
-This project is different because it lets you:
+### “Does this repo come with a hidden powerful AI model?”
 
-- export richer structured data
-- use whichever frontier model you think is best
-- keep your rules editable
-- repeat the workflow whenever your interests change
+No. The strength comes from:
+
+- your structured export
+- your editable rules
+- whichever strong external model you choose for review
+
+### “Do I have to pay for APIs?”
+
+No. Subscription-based web/app tools are the default path.
 
 ## Safety notes
 
-- `sync_groups.py` changes your custom Bilibili follow groups, so always run `--dry-run` first.
-- Cookies expire periodically and need refresh.
-- Very large fetches may hit Bilibili throttling.
+- Always run `--dry-run` before real sync.
+- Cookies expire and need refresh.
+- Very large fetches may hit throttling.
 - Group names cannot contain `/`.
-
-## Companion project
-
-- [bilibili-favorites](https://github.com/sunrisever/bilibili-favorites): organize Bilibili favorites folders with a similar export -> review -> sync workflow
-
-## AI coding assistant support
-
-This repository includes:
-
-- `SKILL.md`
-- `AGENTS.md`
-- `CLAUDE.md`
-
-So it works well with Codex, Claude Code, OpenCode, OpenClaw, and other agent-based coding workflows.
 
 ## License
 
