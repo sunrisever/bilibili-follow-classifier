@@ -2,94 +2,113 @@
 
 # Bilibili Follow
 
-> B站关注 UP 主整理与分组同步工具
+> 导出 B 站关注列表，交给 ChatGPT / Claude / Gemini / Codex 等通用大模型辅助分组，再把结果同步回 B 站关注分组。
 
-这个项目用来把混乱的 B 站关注列表整理成可维护的分组系统。它会采集每个已关注 UP 主的主页和内容信号，用你定义的规则做分类，并把结果同步回 B 站关注分组。
+这个项目适合关注了很多 B 站 UP 主、又觉得 B 站自带分组体验不够强的人。它的核心不是“脚本内置了一个很厉害的 AI”，而是：
 
-## 这个项目解决什么问题
+- 先从 B 站导出结构化关注数据
+- 再交给更强的通用大模型辅助判断
+- 最后仍然由你掌控分类体系
+- 再把最终结果同步回 B 站
 
-关注几百上千个 UP 主之后，默认关注列表通常已经失去整理能力。这个仓库把关注管理拆成一条清晰的流水线：
+## 这个项目到底是干什么的
 
-- 采集关注对象的结构化信息
-- 用可编辑、可审计的规则体系做分类
-- 用大模型或人工复核边界样本
-- 把最终结果同步回 B 站分组
+它把“整理关注列表”拆成一条清晰工作流：
 
-## 核心特点
+1. 采集你关注的 UP 主及其公开信号
+2. 用本地可编辑规则做初步分类
+3. 导出可读摘要，方便 AI 审阅或人工复核
+4. 最后把结果同步回 B 站关注分组
 
-- 全量采集关注列表，包含签名、合集、系列、视频标题、标签、投稿分区等信号
-- 规则优先的分类方式，方便长期迭代和人工维护
-- 支持 `manual` 手工覆盖，稳定保留高置信度分类
-- 支持增量添加新关注的 UP 主
-- 同步前支持 `--dry-run` 预览
-- 内置 `SKILL.md`、`AGENTS.md`、`CLAUDE.md`，适合 Claude Code、Codex、OpenCode、OpenClaw 等 AI 编程助手
+所以它的真实原理不是“浏览器里随便点一下 AI 分类”。
+它更像是：
 
-## 快速入口
+- 导出数据
+- 用更强的外部 AI 模型辅助判断
+- 保留你自己的分类规则
+- 最后再同步回去
 
-- [SKILL.md](SKILL.md)
-- [AGENTS.md](AGENTS.md)
-- [CLAUDE.md](CLAUDE.md)
-- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+## 要不要 API Key？
 
-## 使用流程总览
+**默认不需要。**
 
-1. 把 `data_example/` 复制成 `data/`
-2. 在 `data/config.json` 中填写 B 站 Cookie
-3. 在 `data/classify_rules.json` 中定义你的分类体系
-4. 运行 `python fetch.py all`
-5. 运行 `python classify.py`
-6. 用大模型或人工复核疑难项
-7. 运行 `python sync_groups.py --dry-run`
-8. 确认无误后运行 `python sync_groups.py`
+对大多数用户来说，最推荐的用法是：
 
-## 安装
+- 本地跑采集和分类脚本
+- 把导出的摘要文件交给 ChatGPT 网页端 / App、Claude 网页端 / App、Gemini、Codex、Claude Code、OpenCode 等工具
+- 让 AI 帮你标记可疑项、建议规则修改
+- 最后你自己确认并同步回 B 站
+
+只有当你想把“AI 审阅”这一步也完全脚本化时，才需要自己接 API。
+那属于高级自动化玩法，不是默认要求。
+
+## 适合谁用
+
+如果你有下面这些需求，这个项目就很适合：
+
+- 关注了几百上千个 UP 主
+- 想把学习、考研、AI、编程、数学、资讯、娱乐等内容分开管理
+- 希望分类体系是自己能看懂、能修改、能长期维护的
+- 希望效果明显强于 B 站默认的关注分组体验
+
+## 设计思路
+
+- **规则优先，AI 辅助**：规则是透明、可维护的；AI 主要帮助处理边界样本
+- **分类体系掌握在你自己手里**：不是黑盒自动分完就结束
+- **同步前先预览**：先 `--dry-run`，再真正写回 B 站
+- **支持长期维护**：新关注可以增量加入，不必每次全部重做
+
+## 小白推荐工作流
+
+### 1. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 配置
-
-先复制示例目录：
+### 2. 复制示例数据目录
 
 ```bash
 cp -r data_example data
 ```
 
-再编辑 `data/config.json`：
+如果你在 Windows PowerShell 里，也可以直接手动复制文件夹。
 
-```json
-{
-  "bilibili": {
-    "sessdata": "你的SESSDATA",
-    "bili_jct": "你的bili_jct",
-    "buvid3": "你的buvid3",
-    "dedeuserid": "你的UID"
-  }
-}
-```
+### 3. 填好 B 站 Cookie
 
-Cookie 获取方式：
+编辑 `data/config.json`，填写：
 
-- 登录 B 站
-- 打开开发者工具
-- 进入 `Application -> Cookies`
-- 复制对应字段
+- `sessdata`
+- `bili_jct`
+- `buvid3`
+- `dedeuserid`
 
-## 分类规则说明
+这些字段的作用是让脚本能以你的账号身份读取和同步关注分组。
 
-核心规则文件是 `data/classify_rules.json`。
+### 4. 定义你的分类体系
 
-- `categories`：分类列表，通常最后一个作为兜底分类
-- `manual`：对特定 UP 主的人工硬覆盖
-- `keyword_rules`：每个分类的关键词与权重
-- `zone_mapping`：B 站投稿分区到分类的映射
+编辑 `data/classify_rules.json`。
 
-这个项目故意采用“规则优先”的方式，而不是把分类完全交给黑盒模型。这样你可以持续积累自己的分类体系，而不是每次都重新猜。
+里面最重要的是：
 
-## 常用命令
+- `categories`：分类列表
+- `manual`：你想手工指定的 UP 主分类
+- `keyword_rules`：关键词提示规则
+- `zone_mapping`：B 站投稿分区到你的分类映射
 
-### 全量采集
+一个常见的分类体系可以是：
+
+- 考研
+- AI
+- 编程
+- 数学
+- 资讯
+- 娱乐
+- 其他
+
+## 第一次使用怎么跑
+
+### Step 1：采集关注数据
 
 ```bash
 python fetch.py all
@@ -102,80 +121,120 @@ python fetch.py zones
 python fetch.py <mid>
 ```
 
-### 运行分类
+主要输出：
+
+- `data/up主详细数据.json`
+
+### Step 2：运行本地分类器
 
 ```bash
 python classify.py
 ```
 
-输出：
+主要输出：
 
 - `data/分类结果.json`
 - `data/分类结果.md`
 
-### 重新生成可读汇总
+### Step 3：让更强的 AI 帮你复核
+
+这一步正是最容易被误解的地方。
+
+你**不需要**在这个仓库里强绑某个 API Key。
+更推荐的做法是：
+
+1. 打开 `data/分类结果.md`
+2. 把它交给 ChatGPT / Claude / Gemini / Codex / Claude Code / OpenCode
+3. 问它：
+   - 哪些账号明显分错了？
+   - 哪些应该加入 `manual`？
+   - 哪些关键词规则要调整？
+   - 哪些分类太宽，哪些分类太碎？
+
+然后你再去改 `data/classify_rules.json` 或 `manual` 覆盖。
+
+### Step 4：预览同步
 
 ```bash
-python generate_info.py
+python sync_groups.py --dry-run
 ```
 
-### 增量添加新关注
+如果只想看部分分类，也可以：
+
+```bash
+python sync_groups.py --dry-run --category "考研"
+```
+
+### Step 5：真正同步回 B 站
+
+```bash
+python sync_groups.py
+```
+
+## 日常维护怎么做
+
+第一次全量整理后，后面的长期维护通常是：
+
+1. 把新关注的 UP 主加进来
+2. 再跑一次分类
+3. 用你喜欢的 AI 工具复核疑难项
+4. 先 `--dry-run`
+5. 再执行同步
+
+增量添加新关注：
 
 ```bash
 python add_new.py <mid>
 ```
 
-### 预览并同步到 B 站
+## 你真正需要关心的文件
 
-```bash
-python sync_groups.py --dry-run
-python sync_groups.py
-```
+| 文件 | 作用 |
+| --- | --- |
+| `data/config.json` | 本地 Cookie 和运行配置 |
+| `data/classify_rules.json` | 你自己的分类体系 |
+| `data/up主详细数据.json` | 采集下来的关注数据 |
+| `data/分类结果.json` | 机器可读结果 |
+| `data/分类结果.md` | 给人看、给 AI 看都方便的摘要 |
+| `generate_info.py` | 重新生成可读汇总 |
+| `sync_groups.py` | 预览或执行同步 |
 
-## 推荐复核方式
+## 为什么它比浏览器里那种“内置 AI 分组”更强
 
-这类分类工具最稳的用法通常是：
+很多工具也会说自己有 AI 分类，但往往不够强，原因通常是：
 
-1. 先让规则跑完整体分类
-2. 导出可读摘要
-3. 让大模型标记可疑分类
-4. 人工确认真正模糊的样本
-5. 把稳定样本补回 `manual`
+- 上下文太短
+- 元数据太浅
+- 分类逻辑是黑盒
+- 分完之后很难持续优化
 
-这样系统会越用越稳，而不是每次都从头返工。
+这个项目不一样的地方在于：
 
-## 项目结构
-
-```text
-├── fetch.py
-├── classify.py
-├── sync_groups.py
-├── add_new.py
-├── generate_info.py
-├── SKILL.md
-├── AGENTS.md
-├── CLAUDE.md
-├── RELEASE_CHECKLIST.md
-├── data_example/
-└── data/
-```
-
-## 隐私与安全
-
-- `data/` 中包含 Cookie 和个人分类数据，应只保存在本地
-- 仓库已按隐私型规则配置，避免把本地敏感数据提交到 Git
-- 正式同步前一定先用 `--dry-run` 检查
+- 你可以导出更丰富的结构化数据
+- 你可以自己选择最强的通用大模型
+- 你的分类规则始终可编辑
+- 你的工作流可以反复复用，而不是一次性结果
 
 ## 风险提醒
 
-- `sync_groups.py` 会重建你在 B 站上的自定义关注分组
-- Cookie 会过期
-- 大规模采集可能会触发 B 站限流，投稿分区可以后补
+- `sync_groups.py` 会修改你在 B 站上的自定义关注分组，所以一定先 `--dry-run`
+- Cookie 会过期，需要定期更新
+- 大规模采集可能触发 B 站限流
 - 分组名不能包含 `/`
 
-## 相关项目
+## 配套项目
 
-- [bilibili-favorites](https://github.com/sunrisever/bilibili-favorites)：用于整理和重建 B 站收藏夹
+- [bilibili-favorites](https://github.com/sunrisever/bilibili-favorites)：用于整理 B 站收藏夹，思路和这个项目是一套
+
+## AI 编程助手支持
+
+仓库内已包含：
+
+- `SKILL.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+
+所以它天然适合和 Codex、Claude Code、OpenCode、OpenClaw 这类 agent 工作流一起用。
 
 ## 开源协议
 
