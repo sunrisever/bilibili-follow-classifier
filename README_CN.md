@@ -1,8 +1,8 @@
 [English](README.md) | 简体中文
 
-# B站关注 UP 主分类器
+# Bilibili Follow
 
-> AI-assisted Bilibili follow classifier and group sync | AI 辅助的 B站关注 UP 主分类与分组同步工具
+> B站关注 UP 主整理与分组同步工具
 
 这个项目用来把混乱的 B 站关注列表整理成可维护的分组系统。它会采集每个已关注 UP 主的主页和内容信号，用你定义的规则做分类，并把结果同步回 B 站关注分组。
 
@@ -175,7 +175,7 @@ python sync_groups.py
 
 ## 相关项目
 
-- [bilibili-favorites-classifier](https://github.com/sunrisever/bilibili-favorites-classifier)：用于整理和重建 B 站收藏夹
+- [bilibili-favorites](https://github.com/sunrisever/bilibili-favorites)：用于整理和重建 B 站收藏夹
 
 ## 开源协议
 
